@@ -3,6 +3,12 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# packaging
+__pycache__/
+*.egg-info/
+build/
+dist/
+
 # C extensions
 *.so
 
