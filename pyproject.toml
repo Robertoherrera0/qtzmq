@@ -1,20 +1,43 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "qtzmq"
-version = "0.1.0"
-description = "Qt-friendly ZeroMQ bindings for Python"
-authors = [{name = "Your Name"}]
+version = "0.1.1"
+description = "Qt-friendly ZeroMQ bindings for PySide and PyQt applications"
 readme = "README.md"
 requires-python = ">=3.9"
 
-dependencies = [
+authors = [
+    { name = "Roberto Herrera", email = "robertodherreram@gmail.com" }
+]
+
+license = { text = "MIT" }
+
+keywords = [
+    "qt",
+    "pyside",
+    "pyqt",
+    "zeromq",
+    "zmq",
     "pyzmq",
+    "qt signals",
+    "pubsub",
+    "qt gui",
+    "instrument control"
+]
+
+dependencies = [
+    "pyzmq"
 ]
 
 [project.optional-dependencies]
 qt = [
     "PySide6"
 ]
+
+[project.urls]
+Homepage = "https://github.com/Robertoherrera0/qtzmq"
+Source = "https://github.com/Robertoherrera0/qtzmq"
+Issues = "https://github.com/Robertoherrera0/qtzmq/issues"
