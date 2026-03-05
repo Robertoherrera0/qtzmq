@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qtzmq"
+version = "0.1.0"
+description = "Qt-friendly ZeroMQ bindings for Python"
+authors = [{name = "Your Name"}]
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "pyzmq",
+]
+
+[project.optional-dependencies]
+qt = [
+    "PySide6"
+]

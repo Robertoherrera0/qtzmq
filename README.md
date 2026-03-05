@@ -1,4 +1,5 @@
 # qtzmq
+
 Qt-friendly ZeroMQ bindings for Python.
 
 `qtzmq` provides lightweight wrappers around ZeroMQ sockets that expose incoming messages as Qt signals.  
@@ -21,7 +22,18 @@ When building Qt applications that use ZeroMQ, developers usually need to write 
 - emit Qt signals
 - manage shutdown safely
 
-`qtzmq` provides a small, reusable layer that removes this boilerplate and exposes a simple API.
+`qtzmq` provides a small reusable layer that removes this boilerplate and exposes a simple API.
+
+## Supported Messaging Patterns
+
+The library currently implements wrappers for the core ZeroMQ messaging patterns:
+
+| Pattern | Class |
+|-------|-------|
+| SUB | `QtSubscriber` |
+| PUB | `QtPublisher` |
+| REQ | `QtRequester` |
+| REP | `QtReplier` |
 
 ## Installation
 
