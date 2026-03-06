@@ -35,17 +35,19 @@ class QtRequester(QObject):
 
     def _request_loop(self, msg):
 
+        socket = None
+
         try:
 
-            self.socket = self.ctx.socket(zmq.REQ)
-            self.socket.connect(self.address)
+            socket = self.ctx.socket(zmq.REQ)
+            socket.connect(self.address)
 
             if isinstance(msg, dict):
-                self.socket.send_json(msg)
-                reply = self.socket.recv_json()
+                socket.send_json(msg)
+                reply = socket.recv_json()
             else:
-                self.socket.send(msg)
-                reply = self.socket.recv()
+                socket.send(msg)
+                reply = socket.recv()
 
             self.response.emit(reply)
 
@@ -55,5 +57,5 @@ class QtRequester(QObject):
 
         finally:
 
-            if self.socket:
-                self.socket.close(0)
+            if socket:
+                socket.close(0)

@@ -32,14 +32,13 @@ class QtReplier(QObject):
         self._thread.start()
 
     def stop(self):
-
         self._running = False
-
-        if self.socket:
-            self.socket.close(0)
 
         if self._thread:
             self._thread.join()
+
+        if self.socket:
+            self.socket.close(0)
 
     def reply(self, msg):
 

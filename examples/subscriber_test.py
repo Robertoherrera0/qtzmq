@@ -1,30 +1,36 @@
 import sys
-import signal
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit
 
-from PySide6.QtWidgets import QApplication
-from qtzmq import QtSubscriber
+from qtzmq import subscribe, stream
 
-
-def handler(msg):
-    print("received:", msg)
+ADDR = "tcp://127.0.0.1:8000"
 
 
-def shutdown(*args):
-    print("Shutting down...")
-    sub.stop()
-    app.quit()
+class Viewer(QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout()
+
+        self.log = QTextEdit()
+        self.log.setReadOnly(True)
+
+        layout.addWidget(self.log)
+        self.setLayout(layout)
+
+        stream("data").on("data", self.handle_data)
+
+    def handle_data(self, payload):
+        self.log.append(str(payload))
 
 
 app = QApplication(sys.argv)
 
-# allow ctrl+c to end the test
-signal.signal(signal.SIGINT, shutdown)
+# This creates the subscriber and starts it
+subscribe("data", ADDR)
 
-print("Subscriber starting...")
-
-sub = QtSubscriber("tcp://localhost:6000")
-sub.message.connect(handler)
-
-sub.start()
+win = Viewer()
+win.show()
 
 sys.exit(app.exec())

@@ -1,28 +1,58 @@
 import sys
-import signal
 
-from PySide6.QtWidgets import QApplication
-from qtzmq import QtRequester
+from PySide6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QTextEdit,
+)
+
+from qtzmq import request, stream
+
+ADDR = "tcp://127.0.0.1:8006"
 
 
-def on_response(msg):
-    print("response:", msg)
+class Client(QWidget):
 
+    def __init__(self):
+        super().__init__()
 
-def shutdown(*args):
-    print("Shutting down...")
-    app.quit()
+        self.setWindowTitle("Requester Example")
+
+        layout = QVBoxLayout()
+
+        self.btn = QPushButton("Send Request")
+        self.log = QTextEdit()
+
+        layout.addWidget(self.btn)
+        layout.addWidget(self.log)
+
+        self.setLayout(layout)
+
+        self.btn.clicked.connect(self.send_request)
+
+        stream("rpc").response.connect(self.handle_response)
+
+    def send_request(self):
+
+        payload = {
+            "type": "ping",
+            "value": 123
+        }
+
+        stream("rpc").request(payload)
+
+    def handle_response(self, payload):
+
+        self.log.append(str(payload))
 
 
 app = QApplication(sys.argv)
 
-signal.signal(signal.SIGINT, shutdown)
+request("rpc", ADDR)
 
-req = QtRequester("tcp://localhost:6001")
-req.response.connect(on_response)
-
-print("Sending request...")
-
-req.request({"ping": True})
+win = Client()
+win.show()
 
 sys.exit(app.exec())

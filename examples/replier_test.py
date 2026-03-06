@@ -1,33 +1,30 @@
 import sys
-import signal
 
-from PySide6.QtWidgets import QApplication
-from qtzmq import QtReplier
+from PySide6.QtCore import QCoreApplication
 
+from qtzmq import reply, stream
 
-def on_request(msg):
-    print("received request:", msg)
-
-    response = {"reply": "pong"}
-
-    rep.reply(response)
+ADDR = "tcp://127.0.0.1:8006"
 
 
-def shutdown(*args):
-    print("Shutting down...")
-    rep.stop()
-    app.quit()
+def handle_request(payload):
+
+    print("received:", payload)
+
+    response = {
+        "status": "ok",
+        "echo": payload
+    }
+
+    stream("rpc").reply(response)
 
 
-app = QApplication(sys.argv)
+app = QCoreApplication(sys.argv)
 
-signal.signal(signal.SIGINT, shutdown)
+reply("rpc", ADDR)
 
-rep = QtReplier("tcp://*:6001")
-rep.request.connect(on_request)
+stream("rpc").request.connect(handle_request)
 
-rep.start()
-
-print("Replier running...")
+print("Replier running on", ADDR)
 
 sys.exit(app.exec())
