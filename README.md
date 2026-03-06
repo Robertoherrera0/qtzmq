@@ -24,18 +24,36 @@ When building Qt applications that use ZeroMQ, developers usually need to write 
 
 `qtzmq` provides a small reusable layer that removes this boilerplate and exposes a simple API.
 
-## Supported Messaging Patterns
+## API Overview
 
-The library currently implements wrappers for the core ZeroMQ messaging patterns:
+`qtzmq` manages ZeroMQ connections through a global registry.
 
-| Pattern | Class |
-|-------|-------|
-| SUB | `QtSubscriber` |
-| PUB | `QtPublisher` |
-| REQ | `QtRequester` |
-| REP | `QtReplier` |
+An endpoint is created once and can then be accessed anywhere in the Qt application.
+
+### Create an endpoint
+
+subscribe(name, address)
+
+publish(name, address)
+
+request(name, address)
+
+reply(name, address)
+
+Each call creates a named endpoint and registers it internally.
+
+### Access an endpoint
+
+stream(name)
+
+This returns the previously created endpoint.
+
+Widgets and other components can then attach handlers or send messages through it.
+
+Multiple Qt widgets can consume the same endpoint without managing sockets or threads directly.
+
+See the `examples/` directory for complete usage examples.
 
 ## Installation
 
-```bash
 pip install qtzmq
