@@ -34,9 +34,7 @@ class MetadataWidget(QWidget):
         stream("data").on("metadata", self.handle_metadata)
 
     def handle_metadata(self, payload):
-
         data = payload.get("data", {})
-
         self.log.append(json.dumps(data, indent=2))
 
 

@@ -5,7 +5,7 @@ from .publisher import QtPublisher
 from .requester import QtRequester
 from .replier import QtReplier
 
-from .registry import subscribe, publish, request, reply, stream, stop, stop_all
+from .registry import subscribe, publish, request, requester, reply, stream, stop, stop_all
 
 __all__ = [
     "QtSubscriber",
@@ -15,6 +15,7 @@ __all__ = [
     "subscribe",
     "publish",
     "request",
+    "requester",
     "reply",
     "stream",
     "stop",

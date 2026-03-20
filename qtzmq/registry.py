@@ -1,10 +1,3 @@
-"""
-Global stream registry for qtzmq.
-
-Allows applications to create a named ZeroMQ stream once
-and access it anywhere in the Qt application.
-"""
-
 from .subscriber import QtSubscriber
 from .publisher import QtPublisher
 from .requester import QtRequester
@@ -13,102 +6,111 @@ from .replier import QtReplier
 
 _streams = {}
 
-def subscribe(name, address, topic=""):
-    """
-    Create and start a named QtSubscriber stream.
-    """
 
-    if name in _streams:
-        return _streams[name]
+def _ensure(name):
+    if name not in _streams:
+        _streams[name] = {}
+    return _streams[name]
+
+
+def subscribe(name, address, topic=""):
+    entry = _ensure(name)
+
+    if "sub" in entry:
+        return entry["sub"]
 
     sub = QtSubscriber(address, topic)
     sub.start()
 
-    _streams[name] = sub
+    entry["sub"] = sub
+
+    # bridge existing requester (if already created)
+    if "req" in entry:
+        entry["req"].response.connect(lambda resp: sub.message.emit(resp))
+
     return sub
 
 
 def publish(name, address):
-    """
-    Create and start a named QtPublisher stream.
-    """
+    entry = _ensure(name)
 
-    if name in _streams:
-        return _streams[name]
+    if "pub" in entry:
+        return entry["pub"]
 
     pub = QtPublisher(address)
-    pub.start()
-
-    _streams[name] = pub
+    entry["pub"] = pub
     return pub
 
 
 def request(name, address):
-    """
-    Create and start a named QtRequester stream.
-    """
-    if name in _streams:
-        return _streams[name]
+    entry = _ensure(name)
+
+    if "req" in entry:
+        return entry["req"]
 
     req = QtRequester(address)
+    entry["req"] = req
 
-    _streams[name] = req
+    # bridge into subscriber if exists
+    if "sub" in entry:
+        sub = entry["sub"]
+        req.response.connect(lambda resp: sub.message.emit(resp))
+
     return req
 
 
 def reply(name, address):
-    """
-    Create and start a named QtReplier stream.
-    """
+    entry = _ensure(name)
 
-    if name in _streams:
-        return _streams[name]
+    if "rep" in entry:
+        return entry["rep"]
 
     rep = QtReplier(address)
     rep.start()
 
-    _streams[name] = rep
+    entry["rep"] = rep
     return rep
 
 
 def stream(name):
-    """
-    Retrieve an existing stream.
-    """
-
-    if name not in _streams:
+    if name not in _streams or "sub" not in _streams[name]:
         raise KeyError(
-            f"Stream '{name}' does not exist. "
-            "Create it first with subscribe(), publish(), request(), or reply()."
+            f"Stream '{name}' has no subscriber. "
+            "Call subscribe(name, ...) first."
         )
 
-    return _streams[name]
+    return _streams[name]["sub"]
+
+
+def requester(name):
+    if name not in _streams or "req" not in _streams[name]:
+        raise KeyError(
+            f"Stream '{name}' has no requester. "
+            "Call request(name, ...) first."
+        )
+
+    return _streams[name]["req"]
 
 
 def streams():
-    """
-    Return a dictionary of all active streams.
-    """
-
     return dict(_streams)
 
 
 def stop(name):
-    """
-    Stop and remove a stream.
-    """
-
     if name in _streams:
-        _streams[name].stop()
+        entry = _streams[name]
+
+        for obj in entry.values():
+            if hasattr(obj, "stop"):
+                obj.stop()
+
         del _streams[name]
 
 
 def stop_all():
-    """
-    Stop all active streams.
-    """
-
-    for s in list(_streams.values()):
-        s.stop()
+    for entry in list(_streams.values()):
+        for obj in entry.values():
+            if hasattr(obj, "stop"):
+                obj.stop()
 
     _streams.clear()
