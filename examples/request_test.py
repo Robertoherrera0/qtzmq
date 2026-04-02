@@ -1,58 +1,54 @@
+# tests/test_requester.py
 import sys
+import json
+import threading
+import zmq
 
-from PySide6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QTextEdit,
-)
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
 
-from qtzmq import request, stream
+from qtzmq.requester import QtRequester
 
-ADDR = "tcp://127.0.0.1:8006"
+ADDR = "tcp://127.0.0.1:15555"
 
+def run_rep_server():
+    ctx = zmq.Context()
+    sock = ctx.socket(zmq.REP)
+    sock.bind(ADDR)
+    msg = sock.recv_string()
+    print(f"[SERVER] received: {msg!r}")
+    sock.send_string(json.dumps({"type": "snapshot", "status": "idle", "value": 42}))
+    sock.close()
+    ctx.term()
 
-class Client(QWidget):
+def main():
+    app = QApplication(sys.argv)
 
-    def __init__(self):
-        super().__init__()
+    # start REP server in background
+    t = threading.Thread(target=run_rep_server, daemon=True)
+    t.start()
 
-        self.setWindowTitle("Requester Example")
+    req = QtRequester(ADDR)
 
-        layout = QVBoxLayout()
+    def on_response(resp):
+        print(f"[CLIENT] response: {resp}")
+        assert isinstance(resp, dict), f"expected dict, got {type(resp)}"
+        assert resp.get("type") == "snapshot"
+        assert resp.get("value") == 42
+        print("[PASS] string request -> dict response works correctly")
+        app.quit()
 
-        self.btn = QPushButton("Send Request")
-        self.log = QTextEdit()
+    def on_error(e):
+        print(f"[FAIL] error: {e}")
+        app.quit()
 
-        layout.addWidget(self.btn)
-        layout.addWidget(self.log)
+    req.response.connect(on_response)
+    req.error.connect(on_error)
 
-        self.setLayout(layout)
+    QTimer.singleShot(100, lambda: req.request("snapshot"))
+    QTimer.singleShot(5000, lambda: (print("[FAIL] timeout"), app.quit()))
 
-        self.btn.clicked.connect(self.send_request)
+    sys.exit(app.exec())
 
-        stream("rpc").response.connect(self.handle_response)
-
-    def send_request(self):
-
-        payload = {
-            "type": "ping",
-            "value": 123
-        }
-
-        stream("rpc").request(payload)
-
-    def handle_response(self, payload):
-
-        self.log.append(str(payload))
-
-
-app = QApplication(sys.argv)
-
-request("rpc", ADDR)
-
-win = Client()
-win.show()
-
-sys.exit(app.exec())
+if __name__ == "__main__":
+    main()

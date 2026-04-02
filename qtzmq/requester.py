@@ -46,8 +46,12 @@ class QtRequester(QObject):
                 socket.send_json(msg)
                 reply = socket.recv_json()
             else:
-                socket.send(msg)
-                reply = socket.recv()
+                socket.send_string(str(msg))
+                raw = socket.recv_string()
+                try:
+                    reply = json.loads(raw)
+                except Exception:
+                    reply = raw
 
             self.response.emit(reply)
 

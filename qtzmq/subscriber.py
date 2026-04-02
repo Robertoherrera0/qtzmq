@@ -65,14 +65,15 @@ class QtSubscriber(QObject):
 
                 if self.socket in events:
 
-                    msg = self.socket.recv()
+                    frames = self.socket.recv_multipart()
+
+                    raw = frames[-1] if len(frames) > 1 else frames[0]
 
                     try:
-                        payload = json.loads(msg)
+                        payload = json.loads(raw)
                     except Exception:
-                        payload = msg
+                        payload = raw
 
-                    # emit signal across threads
                     self.message.emit(payload)
 
         except Exception as e:
