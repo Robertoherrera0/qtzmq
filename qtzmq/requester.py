@@ -34,11 +34,8 @@ class QtRequester(QObject):
         self._thread.start()
 
     def _request_loop(self, msg):
-
         socket = None
-
         try:
-
             socket = self.ctx.socket(zmq.REQ)
             socket.connect(self.address)
 
@@ -46,8 +43,8 @@ class QtRequester(QObject):
                 socket.send_json(msg)
                 reply = socket.recv_json()
             else:
-                socket.send_string(str(msg))
-                raw = socket.recv_string()
+                socket.send(str(msg).encode())  # bytes, not string
+                raw = socket.recv().decode()
                 try:
                     reply = json.loads(raw)
                 except Exception:
@@ -56,10 +53,8 @@ class QtRequester(QObject):
             self.response.emit(reply)
 
         except Exception as e:
-
             self.error.emit(str(e))
 
         finally:
-
             if socket:
                 socket.close(0)
