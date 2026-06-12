@@ -41,21 +41,15 @@ def publish(name, address):
     entry["pub"] = pub
     return pub
 
-
-def request(name, address):
+def request(name, address, curve_keys=None):
     entry = _ensure(name)
-
     if "req" in entry:
         return entry["req"]
-
-    req = QtRequester(address)
+    req = QtRequester(address, curve_keys=curve_keys)
     entry["req"] = req
-
-    # bridge into subscriber if exists
     if "sub" in entry:
         sub = entry["sub"]
         req.response.connect(lambda resp: sub.message.emit(resp))
-
     return req
 
 

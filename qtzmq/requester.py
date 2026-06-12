@@ -10,11 +10,11 @@ class QtRequester(QObject):
     response = Signal(object)
     error = Signal(str)
 
-    def __init__(self, address):
+    def __init__(self, address, curve_keys=None):
         super().__init__()
 
         self.address = address
-
+        self.curve_keys = curve_keys 
         self.ctx = zmq.Context.instance()
         self.socket = None
 
@@ -34,17 +34,25 @@ class QtRequester(QObject):
         self._thread.start()
 
     def _request_loop(self, msg):
+
         socket = None
+
         try:
+
             socket = self.ctx.socket(zmq.REQ)
+            if self.curve_keys:
+                cp, cs, sp = self.curve_keys
+                socket.curve_publickey = cp
+                socket.curve_secretkey = cs
+                socket.curve_serverkey = sp
             socket.connect(self.address)
 
             if isinstance(msg, dict):
                 socket.send_json(msg)
                 reply = socket.recv_json()
             else:
-                socket.send(str(msg).encode())  # bytes, not string
-                raw = socket.recv().decode()
+                socket.send_string(str(msg))
+                raw = socket.recv_string()
                 try:
                     reply = json.loads(raw)
                 except Exception:
@@ -53,8 +61,10 @@ class QtRequester(QObject):
             self.response.emit(reply)
 
         except Exception as e:
+
             self.error.emit(str(e))
 
         finally:
+
             if socket:
                 socket.close(0)
